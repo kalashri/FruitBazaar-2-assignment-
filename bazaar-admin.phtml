@@ -1,0 +1,192 @@
+<script>
+  var el = document.getElementsByTagName("body")[0];
+	el.className = "";
+</script>
+
+<nav id="topNav">
+	<ul>
+		<li class="homeHead"><a href="/FruitSite/public/admin/admin/Fruits-Bazaar" title="Home">Fruit Bazaar</a></li>
+		<li class="logout  homeHead"><a href="/FruitSite/public/admin/admin/logout" title="Logout">Logout</a></li>
+	</ul>
+</nav>
+    
+<script>
+	(function($){
+		
+		var nav = $("#topNav");
+		nav.find("li").each(function() {
+		if ($(this).find("ul").length > 0) {
+			$("<span>").text("^").appendTo($(this).children(":first"));
+
+			//show subnav on hover
+			$(this).mouseenter(function() {
+				$(this).find("ul").slideDown("slow").stop(true,true);
+			});
+			
+			//hide submenus on exit
+			$(this).mouseleave(function() {
+				$(this).find("ul").slideUp("fast").stop(true,true);
+			
+			});
+		}
+		});
+	})(jQuery);
+</script>
+</head>
+
+	<form name="BazaarAdmin" method="post" >
+		<div align="center">
+			<div>
+				<label class="errorMsgLbl" value=""></label>
+				<label class="successMsgLbl" value="" id="messageLbl"><?php  echo $this->successMsg;  ?></label>
+			</div>					
+				
+			<label>
+				<h1 align="center"  class="headBold" style="font-size:50px;">Admin Order Page</h1>  
+			</label>	
+				
+	<fieldset class="fieldset_border_none">	
+		<div align="right">
+			<label>Select Date</label>
+
+			<?php  $dateList=$this->dateList;
+
+			$selected = ' '; ?>
+
+			<select id="orderDateList" name="orderDateList" title="orderDate" style="background-color:#d9d9d9;" onchange="submitAdminBazaarForm('<?php echo $this->baseUrl(); ?>' ,'/admin/admin/bazaar-admin','submit',this.form)">
+				<option selected="selected" value="Select">Select</option>
+				<?php foreach ($dateList as $key => $val) 
+				{
+					printf('<option value="%s">%s</option>', $val, $val);
+				}  ?>
+			</select><b class="redStar">*</b>
+			
+			<input type="hidden" id="dateListHdn" name="dateListHdn"></input> 
+			<input type="hidden" id="msgHdn" name="msgHdn"></input>
+		 
+		</div>
+
+		<div align="center" style="padding-top:5%;" width="100%">
+			
+			<div  align="left" style="padding-left:1%;" class="date">
+				<label>
+				<?php
+				if(isset($_POST['orderDateList'])) 
+				echo "Orders for ".$_POST['orderDateList']; ?>
+				</label>
+			</div>
+		
+			<div class="panel">
+			<?php
+				
+			 $totalProductAllQty=0;
+			 $totalArr[]=0;
+			 $custName[]=0;
+			 $orderDetList=$this->orderDetList;
+			 $custOrderId=$this->custList;  
+			 $orderList=$this->orderList;  
+			 $fruitListQty=$this->fruitListQty; 
+			 
+			$orderDetailsObj=new Admin_Model_OrderDetails();
+			$orderDetailsMapper=new Admin_Model_OrderDetailsMapper();
+
+			$fruitOrderedListObj=new Admin_Model_FruitOrder();
+			$fruitOrderedListMapper=new Admin_Model_FruitOrderMapper();
+			
+			$productDetailsObj=new Admin_Model_Products();
+			$productDetailsMapper=new Admin_Model_ProductsMapper();
+
+			   for($i=0;$i<count($orderDetList);$i++)
+				{
+					$orderList[]=$orderDetList[$i]['order_id']; 
+					$custList[]=$orderDetList[$i]['customer_id'];
+					$fruitOrderedList=$fruitOrderedListMapper->findByField('order_id',$orderDetList[$i]['order_id'],$fruitOrderedListObj);
+				
+					for($j=0;$j<count($fruitOrderedList);$j++)
+					{
+						$DetList[$j]=$fruitOrderedListMapper->toArray($fruitOrderedList[$j]);
+					}
+					for($k=0;$k<count($DetList);$k++)
+					{
+						$productNameQty=$productDetailsMapper->findByField('p_id',$DetList[$k]['p_id'],$productDetailsObj);
+						for($a=0;$a<count($productNameQty);$a++)
+						{
+							$fruitList[$a]=$productDetailsMapper->toArray($productNameQty[$a]);
+							$fruitListQty[]=$fruitList[$a];
+						}  
+							
+					}  ?>
+								
+					<h2  style="border:1px solid #000000;padding:0 20% 0 0;">
+					<?php echo "Order #".$orderDetList[$i]['order_id'];  echo" - "; echo $custOrderId[$i]['username'];  ?></h2>
+			
+					<div class="panelcontent">
+						
+					<?php 
+					 $custName[]= $custOrderId[$i]['username'];  $totalProductQty=0; for($f=0;$f<count($fruitListQty);$f++) 
+					 { ?>
+					<table style="border:1px solid #bf7575;" class="borderTbl">
+						<tr> 
+						<td width="280px">
+						<?php echo $fruitListQty[$f]['product_name']; ?></td>
+						<td><?php echo $fruitListQty[$f]['product_price']; ?></td>
+						<?php    
+							   $totalProductQty=$totalProductQty+$fruitListQty[$f]['product_price'];   
+							   
+						?>
+						</tr>
+					</table>
+					<?php } ?>
+					
+					<table>
+						<tr>
+						<td width="280px"><b>Total</b></td><td><b><?php echo $totalProductQty; ?></b></td>
+						<?php 
+			
+						 if(isset($totalProductQty))
+						 {
+							 for($k=0;$k<count($custName);$k++)
+							 {
+							$totalArr[$custName[$k]]=$totalProductQty; } 
+						    }?>
+						</tr>
+					</table>
+						<?php  	
+							   $totalProductAllQty=$totalProductAllQty+$totalProductQty;    
+						?>
+						</div>
+					  <?php  } $maxval=max($totalArr);
+								foreach($totalArr as $key=>$value)
+								{
+									 if($value==$maxval)
+									 {
+										$maxkey=$key;
+									 }
+								}
+							
+						?> 
+					  </div>
+			
+					</div>
+					<br>
+					<fieldset class="fruitMainField">
+					<table align="left"><tr>
+					<td><label style="font-weight:bold;font-size:1em;">Snapshot</label></td></tr>
+					<tr>
+					<td>
+					<label><?php if(isset($_POST['orderDateList'])) echo" . Total Order for ".$_POST['orderDateList']." is <b>Rs ".$totalProductAllQty."</b>"; ?></label>
+					</td>
+					</tr>
+					<tr>
+					<td>
+						<label><?php if(isset($_POST['orderDateList'])) echo" . Largest Order Placed By <b>".$maxkey."</b> for <b>Rs ".$maxval."</b>"; ?></label>
+					</td>
+					</tr>
+					</table>
+
+					</fieldset>
+					</fieldset>
+
+					</form>
+					</body>
+					</html>
